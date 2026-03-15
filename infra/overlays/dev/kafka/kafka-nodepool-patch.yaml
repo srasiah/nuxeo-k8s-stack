@@ -1,0 +1,18 @@
+# infra/overlays/prod/kafka/kafka-nodepool-patch.yaml
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaNodePool
+metadata:
+  name: kafka
+  namespace: kafka
+spec:
+  replicas: 1
+  resources:
+    requests:
+      cpu: ".5"
+      memory: 1Gi
+    limits:
+      cpu: "1"
+      memory: 2Gi
+  jvmOptions:
+    -Xms: 1g
+    -Xmx: 1g

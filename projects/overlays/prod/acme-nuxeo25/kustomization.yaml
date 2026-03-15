@@ -1,0 +1,92 @@
+# projects/overlays/stage/acme-nuxeo25/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: acme-nuxeo25
+# namePrefix: acme-
+
+resources:
+  - ./01-namespace.yaml
+  - ../../../base/nuxeo
+  - ./ingress.yaml
+
+patches:
+  - path: 02-api-deployment-patch.yaml
+  - path: 03-worker-deployment-patch.yaml
+
+images:
+  - name: docker-private.packages.nuxeo.com/nuxeo/nuxeo
+    newName: your-registry/nuxeo-benchmark
+    newTag: "2025.10-SNAPSHOT"
+
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+secretGenerator:
+  - name: nuxeo-secret
+    envs:
+      - .env.nuxeo.secret
+  - name: try-cred
+    type: kubernetes.io/dockerconfigjson
+    files:
+      - .dockerconfigjson
+
+configMapGenerator:
+  - name: nuxeo-common-config
+    behavior: merge
+    literals:
+      - NUXEO_ENVIRONMENT=prod
+      - NUXEO_MONGODB_DBNAME=prod-acme-nuxeo25
+      - NUXEO_PROFILES="nuxeo-web-ui,s3binaries,mongodb,mongodb-audit,opensearch1-search-client,opensearch1-audit"
+      #- NUXEO_PACKAGES="nuxeo-web-ui nuxeo-search-client-opensearch1 nuxeo-audit-opensearch1 amazon-s3-online-storage"
+      - NUXEO_BLOB_MANAGER=org.nuxeo.ecm.blob.s3.S3BlobProvider
+
+
+      - NUXEO_ELASTICSEARCH_MANAGEALIAS_ENABLED=false
+      - NUXEO_ELASTICSEARCH_INDEXNAME=prod-acme-nuxeo25
+
+      - NUXEO_KAFKA_ENABLED="true"
+      - NUXEO_KAFKA_TOPICPREFIX=prod-acme-nuxeo25-
+      - NUXEO_STREAM_KAFKA_DEFAULT_REPLICATION_FACTOR=2
+
+      - NUXEO_AWS_REGION=us-east-1
+      - NUXEO_S3STORAGE_BUCKET=nuxeo-blob-storage
+      - NUXEO_S3STORAGE_BUCKET_PREFIX=prod-acme-nuxeo25/
+      - NUXEO_S3STORAGE_PATHSTYLEACCESS=true
+
+      - NUXEO_DEV=true
+
+      - NUXEO_LOG_LEVEL=DEBUG
+      - ROOT_LOG_LEVEL=DEBUG
+      - DEV_LOG_LEVEL=DEBUG
+      - NUXEO_ELASTICSEARCH_DEBUG=true
+      - NUXEO_MONGODB_DEBUG=true
+      - NUXEO_BLOB_S3_DEBUG=true
+
+  - name: nuxeo-common-config
+    behavior: merge
+    envs:
+      - .env.nuxeo
+
+replacements:
+  - source:
+      kind: ConfigMap
+      name: nuxeo-common-config
+      fieldPath: data.ACME25_HOST
+    targets:
+      - select:
+          kind: Ingress
+          name: nuxeo-ingress
+        fieldPaths:
+          - spec.rules.0.host
+          - spec.tls.0.hosts.0
+ 
+  - source:
+      kind: ConfigMap
+      name: nuxeo-common-config
+      fieldPath: data.CLUSTER_ISSUER
+    targets:
+      - select:
+          kind: Ingress
+        fieldPaths:
+          - metadata.annotations.cert-manager\.io/cluster-issuer

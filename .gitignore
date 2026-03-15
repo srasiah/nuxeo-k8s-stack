@@ -1,0 +1,34 @@
+# Node.js
+node_modules/
+dist/
+
+
+# Python
+__pycache__/
+*.pyc
+
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+
+# IDEs
+.vscode/
+.idea/
+
+# Environment files (ignore all except samples)
+**/.env
+**/.env.*
+!**/.env.*.sample
+!**/.env.*.*.sample
+
+# OS-generated files
+Thumbs.db
+**/params.env
+
+**/*secret.yaml
+secrets/
+samples/
+.dockerconfigjson

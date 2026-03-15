@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: mongodb-sysctl-fix
+  namespace: mongo
+  labels:
+    app: mongodb-sysctl-fix
+spec:
+  selector:
+    matchLabels:
+      app: mongodb-sysctl-fix
+  template:
+    metadata:
+      labels:
+        app: mongodb-sysctl-fix
+    spec:
+      hostPID: true
+      containers:
+      - name: sysctl-fix
+        image: busybox
+        command: ['sh', '-c', 'sysctl -w vm.max_map_count=1677720 && sysctl -w vm.swappiness=1 && echo "Sysctl settings applied" && sleep infinity']
+        securityContext:
+          privileged: true
+        resources:
+          requests:
+            cpu: "10m"
+            memory: "16Mi"
+          limits:
+            cpu: "50m"
+            memory: "32Mi"

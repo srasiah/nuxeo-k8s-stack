@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nuxeo-ingress
+  namespace: acme-nuxeo25
+  annotations:
+    cert-manager.io/cluster-issuer: $(CLUSTER_ISSUER)
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - $(ACME25_HOST)
+    secretName: acme25-tls
+  rules:
+  - host: $(ACME25_HOST)
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nuxeo-service
+            port:
+              number: 9080

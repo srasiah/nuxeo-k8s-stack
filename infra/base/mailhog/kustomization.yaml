@@ -1,0 +1,17 @@
+# kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: mailhog  
+
+resources:
+- 01-namespace.yaml
+- 02-mailhog-pvc.yaml
+- 03-mailserver-deployment.yaml
+- 04-mailserver-service.yaml
+
+# You can add common labels or annotations here if needed
+# labels:
+# - includeSelectors: true
+#   pairs:
+#     app.kubernetes.io/managed-by: kustomize
+#     app.kubernetes.io/part-of: mailhog-stack

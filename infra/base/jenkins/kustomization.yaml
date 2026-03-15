@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: jenkins
+
+resources:
+- 01-namespace.yaml
+- 02-jenkins-pvc.yaml
+- 03-jenkins-serviceaccount.yaml
+- 30-jenkins-plugins-configmap.yaml
+- 31-jenkins-casc-configmap.yaml
+- 21-jenkins-deployment.yaml
+- 22-jenkins-service.yaml
+
+# labels:
+# - includeSelectors: true
+#   pairs:
+#     app.kubernetes.io/managed-by: kustomize
+#     app.kubernetes.io/part-of: jenkins-stack

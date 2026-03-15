@@ -1,0 +1,113 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  labels:
+    app: grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+        - name: grafana
+          image: grafana/grafana:10.1.4
+          ports:
+            - containerPort: 3000
+              name: web
+          env:
+            - name: GF_SECURITY_ADMIN_USER
+              value: admin
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              value: admin
+            - name: GF_INSTALL_PLUGINS
+              value: ""
+          volumeMounts:
+            - name: grafana-storage
+              mountPath: /var/lib/grafana
+            - name: grafana-datasources
+              mountPath: /etc/grafana/provisioning/datasources
+            - name: grafana-dashboard-k8s-addons-prometheus
+              mountPath: /var/lib/grafana/dashboards/k8s-addons-prometheus.json
+              subPath: k8s-addons-prometheus.json
+            - name: grafana-dashboard-k8s-addons-trivy-operator
+              mountPath: /var/lib/grafana/dashboards/k8s-addons-trivy-operator.json
+              subPath: k8s-addons-trivy-operator.json
+            - name: grafana-dashboard-k8s-system-api-server
+              mountPath: /var/lib/grafana/dashboards/k8s-system-api-server.json
+              subPath: k8s-system-api-server.json
+            - name: grafana-dashboard-k8s-system-coredns
+              mountPath: /var/lib/grafana/dashboards/k8s-system-coredns.json
+              subPath: k8s-system-coredns.json
+            - name: grafana-dashboard-k8s-views-global
+              mountPath: /var/lib/grafana/dashboards/k8s-views-global.json
+              subPath: k8s-views-global.json
+            - name: grafana-dashboard-k8s-views-namespaces
+              mountPath: /var/lib/grafana/dashboards/k8s-views-namespaces.json
+              subPath: k8s-views-namespaces.json
+            - name: grafana-dashboard-k8s-views-nodes
+              mountPath: /var/lib/grafana/dashboards/k8s-views-nodes.json
+              subPath: k8s-views-nodes.json
+            - name: grafana-dashboard-k8s-views-pods
+              mountPath: /var/lib/grafana/dashboards/k8s-views-pods.json
+              subPath: k8s-views-pods.json
+            - name: grafana-dashboard-nuxeo-logs
+              mountPath: /var/lib/grafana/dashboards/nuxeo-logs.json
+              subPath: nuxeo-logs.json
+            - name: grafana-dashboard-k8s-pod-logs
+              mountPath: /var/lib/grafana/dashboards/k8s-pod-logs.json
+              subPath: k8s-pod-logs.json
+            - name: grafana-dashboard-provider
+              mountPath: /etc/grafana/provisioning/dashboards
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+      volumes:
+        - name: grafana-storage
+          persistentVolumeClaim:
+            claimName: grafana-pvc
+        - name: grafana-datasources
+          configMap:
+            name: grafana-datasources
+        - name: grafana-dashboard-k8s-addons-prometheus
+          configMap:
+            name: grafana-dashboard-k8s-addons-prometheus
+        - name: grafana-dashboard-k8s-addons-trivy-operator
+          configMap:
+            name: grafana-dashboard-k8s-addons-trivy-operator
+        - name: grafana-dashboard-k8s-system-api-server
+          configMap:
+            name: grafana-dashboard-k8s-system-api-server
+        - name: grafana-dashboard-k8s-system-coredns
+          configMap:
+            name: grafana-dashboard-k8s-system-coredns
+        - name: grafana-dashboard-k8s-views-global
+          configMap:
+            name: grafana-dashboard-k8s-views-global
+        - name: grafana-dashboard-k8s-views-namespaces
+          configMap:
+            name: grafana-dashboard-k8s-views-namespaces
+        - name: grafana-dashboard-k8s-views-nodes
+          configMap:
+            name: grafana-dashboard-k8s-views-nodes
+        - name: grafana-dashboard-k8s-views-pods
+          configMap:
+            name: grafana-dashboard-k8s-views-pods
+        - name: grafana-dashboard-nuxeo-logs
+          configMap:
+            name: grafana-dashboard-nuxeo-logs
+        - name: grafana-dashboard-k8s-pod-logs
+          configMap:
+            name: grafana-dashboard-k8s-pod-logs
+        - name: grafana-dashboard-provider
+          configMap:
+            name: grafana-dashboard-provider

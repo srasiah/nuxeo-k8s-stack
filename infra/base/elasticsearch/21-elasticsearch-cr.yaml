@@ -1,0 +1,53 @@
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: elasticsearch
+  namespace: elasticsearch
+spec:
+  version: 8.13.0
+  http:
+    tls:
+      selfSignedCertificate:
+        disabled: true
+  nodeSets:
+    - name: default
+      count: 1
+      config:
+        node.store.allow_mmap: false       # safe for Docker / K8s
+        xpack.security.enabled: false      # disable security for dev/test
+      podTemplate:
+        spec:
+          containers:
+          - name: elasticsearch
+            readinessProbe:
+              httpGet:
+                path: /
+                port: 9200
+                scheme: HTTP
+              initialDelaySeconds: 20
+              periodSeconds: 10
+              failureThreshold: 6
+            resources:
+              requests:
+                cpu: "200m"
+                memory: "2Gi"
+              limits:
+                cpu: "1"
+                memory: "4Gi"
+          affinity:
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - weight: 100
+                  podAffinityTerm:
+                    labelSelector:
+                      matchLabels:
+                        elasticsearch.k8s.elastic.co/cluster-name: elasticsearch
+                    topologyKey: kubernetes.io/hostname
+      volumeClaimTemplates:
+        - metadata:
+            name: elasticsearch-data
+          spec:
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 10Gi

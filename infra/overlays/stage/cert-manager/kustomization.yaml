@@ -1,0 +1,11 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- ../../../base/cert-manager
+- 01-letsencrypt-staging-cloudflare-issuer.yaml
+#- 03-wildcard-stage-certificate.yaml
+
+namespace: cert-manager
+
+

@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: nginx-gateway
+
+resources:
+- 01-namespace.yaml
+# Install NGINX Gateway Fabric first:
+# kubectl apply -f https://github.com/nginxinc/nginx-gateway-fabric/releases/download/v2.3.0/crds.yaml
+# kubectl apply -f https://github.com/nginxinc/nginx-gateway-fabric/releases/download/v2.3.0/nginx-gateway.yaml
+- 02-gatewayclass.yaml
+- 03-gateway.yaml
+- 04-gateway-service.yaml
+- 05-gateway-certificate.yaml
+
+patches:
+- path: service-patch.yaml
+
+labels:
+- includeSelectors: false
+  pairs:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/part-of: nginx-gateway-stack

@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jenkins-plugins
+data:
+  plugins.txt: |
+    kubernetes:latest
+    workflow-aggregator:latest
+    git:latest
+    configuration-as-code:latest
+    credentials-binding:latest
+    job-dsl:latest
+    docker-workflow:latest
+    pipeline-stage-view:latest
+    blueocean:latest
+    kubernetes-cli:latest
+    gitlab-plugin:latest

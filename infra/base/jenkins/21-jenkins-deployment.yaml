@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins
+  labels:
+    app: jenkins
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jenkins
+  template:
+    metadata:
+      labels:
+        app: jenkins
+    spec:
+      serviceAccountName: jenkins
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+      initContainers:
+      - name: install-plugins
+        image: jenkins/jenkins:2.545-jdk21
+        command:
+        - sh
+        - -c
+        - |
+          jenkins-plugin-cli --plugin-file /tmp/plugins.txt
+        volumeMounts:
+        - name: jenkins-home
+          mountPath: /var/jenkins_home
+        - name: plugins-config
+          mountPath: /tmp/plugins.txt
+          subPath: plugins.txt
+      containers:
+      - name: jenkins
+        image: jenkins/jenkins:2.545-jdk21
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+          name: http
+        - containerPort: 50000
+          name: agent
+        env:
+        - name: JAVA_OPTS
+          value: "-Djenkins.install.runSetupWizard=false"
+        - name: CASC_JENKINS_CONFIG
+          value: "/var/jenkins_home/casc_configs/jenkins.yaml"
+        - name: JENKINS_ADMIN_PASSWORD
+          value: "admin"  # TODO: Use secret
+        volumeMounts:
+        - name: jenkins-home
+          mountPath: /var/jenkins_home
+        - name: casc-config
+          mountPath: /var/jenkins_home/casc_configs
+        livenessProbe:
+          httpGet:
+            path: /login
+            port: 8080
+          initialDelaySeconds: 90
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 5
+        readinessProbe:
+          httpGet:
+            path: /login
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "1Gi"
+          limits:
+            cpu: "2"
+            memory: "2Gi"
+      volumes:
+      - name: jenkins-home
+        persistentVolumeClaim:
+          claimName: jenkins-pvc
+      - name: plugins-config
+        configMap:
+          name: jenkins-plugins
+      - name: casc-config
+        configMap:
+          name: jenkins-casc

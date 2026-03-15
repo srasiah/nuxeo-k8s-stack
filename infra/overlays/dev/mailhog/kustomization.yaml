@@ -1,0 +1,42 @@
+# infra/overlays/dev/mailhog/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: mailhog
+
+resources:
+- ../../../base/mailhog
+- ingress.yaml
+
+images:
+- name: mailhog/mailhog
+  newName: mailhog/mailhog
+  newTag: latest
+
+configMapGenerator:
+  - name: mailhog-config
+    envs:
+      - .env.mailhog
+
+replacements:
+  - source:
+      kind: ConfigMap
+      name: mailhog-config
+      fieldPath: data.MAILHOG_HOST
+    targets:
+      - select:
+          kind: Ingress
+          name: mailhog-ingress
+        fieldPaths:
+          - spec.rules.0.host
+          - spec.tls.0.hosts.0
+  - source:
+      kind: ConfigMap
+      name: mailhog-config
+      fieldPath: data.CLUSTER_ISSUER
+    targets:
+      - select:
+          kind: Ingress
+          name: mailhog-ingress
+        fieldPaths:
+          - metadata.annotations.cert-manager\.io/cluster-issuer
+

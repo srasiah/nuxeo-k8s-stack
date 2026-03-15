@@ -1,0 +1,7 @@
+# infra/overlays/prod/elastic-operator/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: elastic-system
+
+resources:
+- ../../../base/elastic-operator

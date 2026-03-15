@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: elasticsearch-ingress
+  namespace: elasticsearch
+  annotations:
+    cert-manager.io/cluster-issuer: $(CLUSTER_ISSUER)
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS" 
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - $(KIBANA_HOST)
+    secretName: elasticsearch-tls
+  rules:
+  - host: $(KIBANA_HOST)
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: kibana-kb-http
+            port:
+              number: 5601

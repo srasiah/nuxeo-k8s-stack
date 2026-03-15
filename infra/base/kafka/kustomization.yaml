@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: kafka
+
+resources:
+  #- 01-namespace.yaml
+  - 02-kafka-kraft.yaml
+  - 03-kafka-nodepool.yaml
+  - 03-kafka-ui.yaml
+  - 04-kafka-ui-service.yaml
+
+
+# labels:
+# - includeSelectors: true
+#   pairs:
+#     app.kubernetes.io/managed-by: kustomize
+#     app.kubernetes.io/part-of: kafka-stack
+
+

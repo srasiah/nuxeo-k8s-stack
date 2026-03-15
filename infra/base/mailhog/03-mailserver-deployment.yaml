@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mailserver-deployment
+  labels:
+    app: mailserver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mailserver
+  template:
+    metadata:
+      labels:
+        app: mailserver
+    spec:
+      containers:
+      - name: mailserver
+        image: mailhog/mailhog
+        env:
+        - name: MH_STORAGE
+          value: maildir
+        ports:
+        - containerPort: 1025 # SMTP port
+        - containerPort: 8025 # Web UI port
+        volumeMounts:
+        - name: mailhog-data-volume
+          mountPath: /maildir
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+      volumes:
+      - name: mailhog-data-volume
+        persistentVolumeClaim:
+          claimName: mailhog-data

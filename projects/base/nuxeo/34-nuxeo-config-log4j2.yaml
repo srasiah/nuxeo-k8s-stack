@@ -1,0 +1,87 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nuxeo-config-log4j2
+data:
+  log4j2.xml: |
+    <?xml version="1.0" encoding="UTF-8"?>
+    <Configuration monitorInterval="30">
+      <Properties>
+        <Property name="defaultConsoleLayout">
+          <![CDATA[%d{ISO8601} %-5p [%c{1}] %m%n]]>
+        </Property>
+        <Property name="consoleLayout">
+          <![CDATA[${sys:nuxeo.common.logging.console.layout:-${defaultConsoleLayout}}]]>
+        </Property>
+        <Property name="defaultFileLayout">
+          <![CDATA[%d{ISO8601} %-5p [%t] [%c] %m%n]]>
+        </Property>
+        <Property name="fileLayout">
+          <![CDATA[${sys:nuxeo.common.logging.file.layout:-${defaultFileLayout}}]]>
+        </Property>
+      </Properties>
+
+      <Appenders>
+        <!-- Console logging for stdout -->
+        <Console name="CONSOLE" target="SYSTEM_OUT">
+          <PatternLayout pattern="${consoleLayout}" />
+        </Console>
+
+        <!-- Main rolling file -->
+        <RollingFile name="FILE-ORIGINAL" fileName="${sys:nuxeo.log.dir}/server.log"
+                     filePattern="${sys:nuxeo.log.dir}/server-%d{yyyy-MM-dd}.log.gz" append="true">
+          <PatternLayout pattern="${fileLayout}" />
+          <CronTriggeringPolicy schedule="0 0 0 * * ?" evaluateOnStartup="true" />
+          <DefaultRolloverStrategy />
+        </RollingFile>
+
+        <!-- Errors file -->
+        <RollingFile name="ERROR-FILE" fileName="${sys:nuxeo.log.dir}/nuxeo-error.log"
+                     filePattern="${sys:nuxeo.log.dir}/nuxeo-error-%d{yyyy-MM-dd}.log.gz" append="true">
+          <PatternLayout pattern="${fileLayout}" />
+          <CronTriggeringPolicy schedule="0 0 0 * * ?" evaluateOnStartup="true" />
+          <DefaultRolloverStrategy />
+        </RollingFile>
+
+        <!-- Tomcat Catalina log -->
+        <RollingFile name="CATALINA" fileName="${sys:nuxeo.log.dir}/catalina.log"
+                     filePattern="${sys:nuxeo.log.dir}/catalina-%d{yyyy-MM-dd}.log.gz" append="true">
+          <PatternLayout pattern="${fileLayout}" />
+          <CronTriggeringPolicy schedule="0 0 0 * * ?" evaluateOnStartup="true" />
+          <DefaultRolloverStrategy />
+        </RollingFile>
+      </Appenders>
+
+      <Loggers>
+        <!-- Nuxeo core runtime -->
+        <Logger name="org.nuxeo" level="INFO" additivity="false">
+          <AppenderRef ref="CONSOLE"/>
+          <AppenderRef ref="FILE-ORIGINAL"/>
+        </Logger>
+
+        <!-- Elasticsearch / OpenSearch -->
+        <Logger name="org.nuxeo.elasticsearch" level="INFO" additivity="false">
+          <AppenderRef ref="CONSOLE"/>
+          <AppenderRef ref="FILE-ORIGINAL"/>
+        </Logger>
+
+        <!-- MongoDB -->
+        <Logger name="org.nuxeo.ecm.core.storage" level="INFO" additivity="false">
+          <AppenderRef ref="CONSOLE"/>
+          <AppenderRef ref="FILE-ORIGINAL"/>
+        </Logger>
+
+        <!-- Tomcat startup -->
+        <Logger name="org.apache.catalina.startup.Catalina" level="INFO" additivity="false">
+          <AppenderRef ref="CONSOLE"/>
+          <AppenderRef ref="CATALINA"/>
+        </Logger>
+
+        <!-- Root logger -->
+        <Root level="INFO">
+          <AppenderRef ref="CONSOLE"/>
+          <AppenderRef ref="FILE-ORIGINAL"/>
+          <AppenderRef ref="ERROR-FILE"/>
+        </Root>
+      </Loggers>
+    </Configuration>

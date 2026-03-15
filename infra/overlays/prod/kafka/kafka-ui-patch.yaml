@@ -1,0 +1,13 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-ui
+  namespace: kafka
+spec:
+  template:
+    spec:
+      containers:
+        - name: kafka-ui
+          env:
+            - name: KAFKA_CLUSTERS_0_READONLY
+              value: "false"

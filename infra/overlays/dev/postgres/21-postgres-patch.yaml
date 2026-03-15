@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+        - name: postgres
+          env:
+            - name: POSTGRES_HOST_AUTH_METHOD
+              value: "trust"
+          command:
+            - /bin/bash
+            - -c
+            - |
+              # Add pod network to pg_hba.conf if not already present
+              if [ -f /var/lib/postgresql/data/pgdata/pg_hba.conf ]; then
+                if ! grep -q "10.0.0.0/8" /var/lib/postgresql/data/pgdata/pg_hba.conf; then
+                  echo "host all all 10.0.0.0/8 trust" >> /var/lib/postgresql/data/pgdata/pg_hba.conf
+                fi
+              fi
+              # Start postgres normally
+              exec docker-entrypoint.sh postgres
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "2"
+              memory: "4Gi"

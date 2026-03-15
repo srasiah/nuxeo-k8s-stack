@@ -1,0 +1,76 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: promtail-config
+  namespace: loki
+  labels:
+    app: promtail
+data:
+  promtail.yaml: |
+    server:
+      http_listen_port: 9080
+      grpc_listen_port: 0
+
+    positions:
+      filename: /tmp/positions.yaml
+
+    clients:
+      - url: http://loki-service.loki.svc.cluster.local:3100/loki/api/v1/push
+
+    scrape_configs:
+      # Scrape all pod logs
+      - job_name: kubernetes-pods
+        kubernetes_sd_configs:
+          - role: pod
+        pipeline_stages:
+          - cri: {}
+          # Extract log level from log lines and expose as metrics
+          - regex:
+              expression: '.*(?P<level>ERROR|WARN|INFO|DEBUG).*'
+          - labels:
+              level:
+          - metrics:
+              log_lines_total:
+                type: Counter
+                description: "Total number of log lines by level"
+                config:
+                  action: inc
+        relabel_configs:
+          # Drop logs from system namespaces
+          - source_labels: [__meta_kubernetes_namespace]
+            regex: 'kube-system|kube-public|kube-node-lease'
+            action: drop
+          
+          # Add namespace label
+          - source_labels: [__meta_kubernetes_namespace]
+            target_label: namespace
+          
+          # Add pod name label
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: pod
+          
+          # Add container name label
+          - source_labels: [__meta_kubernetes_pod_container_name]
+            target_label: container
+          
+          # Add app label if exists
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            target_label: app
+          
+          # Add appGroup label if exists
+          - source_labels: [__meta_kubernetes_pod_label_appGroup]
+            target_label: appGroup
+          
+          # Add appRole label if exists
+          - source_labels: [__meta_kubernetes_pod_label_appRole]
+            target_label: appRole
+          
+          # Add node name label
+          - source_labels: [__meta_kubernetes_pod_node_name]
+            target_label: node
+          
+          # Set the path to the log file
+          - source_labels: [__meta_kubernetes_pod_uid, __meta_kubernetes_pod_container_name]
+            target_label: __path__
+            separator: /
+            replacement: /var/log/pods/*$1/*.log

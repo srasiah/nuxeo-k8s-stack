@@ -1,0 +1,41 @@
+# infra/overlays/dev/minio/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: minio
+
+resources:
+- ../../../base/minio
+- ingress.yaml
+
+configMapGenerator:
+  - name: minio-config
+    envs:
+      - .env.minio
+
+images:
+- name: quay.io/minio/minio
+  newName: quay.io/minio/minio
+  newTag: RELEASE.2025-05-24T17-08-30Z
+
+replacements:
+  - source:
+      kind: ConfigMap
+      name: minio-config
+      fieldPath: data.MINIO_HOST
+    targets:
+      - select:
+          kind: Ingress
+          name: minio-ingress
+        fieldPaths:
+          - spec.rules.0.host
+          - spec.tls.0.hosts.0
+  - source:
+      kind: ConfigMap
+      name: minio-config
+      fieldPath: data.CLUSTER_ISSUER
+    targets:
+      - select:
+          kind: Ingress
+          name: minio-ingress
+        fieldPaths:
+          - metadata.annotations.cert-manager\.io/cluster-issuer

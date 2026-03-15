@@ -1,0 +1,18 @@
+# mailserver-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: mailserver-service
+spec:
+  selector:
+    app: mailserver
+  ports:
+    - protocol: TCP
+      port: 1025 # SMTP service port
+      targetPort: 1025
+      name: smtp # Added name for the SMTP port
+    - protocol: TCP
+      port: 8096 # Web UI service port
+      targetPort: 8025
+      name: http-ui # Added name for the HTTP UI port
+  type: ClusterIP # Expose inside the cluster

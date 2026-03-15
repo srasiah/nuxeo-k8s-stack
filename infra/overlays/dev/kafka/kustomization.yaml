@@ -1,0 +1,41 @@
+# infra/overlays/prod/kafka/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: kafka
+
+resources:
+- ../../../base/kafka
+- ingress.yaml
+
+configMapGenerator:
+  - name: kafka-config
+    envs:
+      - .env.kafka
+
+patches:
+- path: kafka-nodepool-patch.yaml
+- path: kafka-patch.yaml
+- path: kafka-ui-patch.yaml
+
+replacements:
+  - source:
+      kind: ConfigMap
+      name: kafka-config
+      fieldPath: data.KAFKA_UI_HOST
+    targets:
+      - select:
+          kind: Ingress
+          name: kafka-ingress
+        fieldPaths:
+          - spec.rules.0.host
+          - spec.tls.0.hosts.0
+  - source:
+      kind: ConfigMap
+      name: kafka-config
+      fieldPath: data.CLUSTER_ISSUER
+    targets:
+      - select:
+          kind: Ingress
+          name: kafka-ingress
+        fieldPaths:
+          - metadata.annotations.cert-manager\.io/cluster-issuer

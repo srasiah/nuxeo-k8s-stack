@@ -1,0 +1,39 @@
+# infra/overlays/prod/elasticsearch/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: elasticsearch
+
+resources:
+- ../../../base/elasticsearch
+- ingress.yaml
+
+patches:
+- path: 21-elasticsearch-patch.yaml
+
+configMapGenerator:
+  - name: elasticsearch-config
+    envs:
+      - .env.elasticsearch
+
+replacements:
+  - source:
+      kind: ConfigMap
+      name: elasticsearch-config
+      fieldPath: data.KIBANA_HOST
+    targets:
+      - select:
+          kind: Ingress
+          name: elasticsearch-ingress
+        fieldPaths:
+          - spec.rules.0.host
+          - spec.tls.0.hosts.0
+  - source:
+      kind: ConfigMap
+      name: elasticsearch-config
+      fieldPath: data.CLUSTER_ISSUER
+    targets:
+      - select:
+          kind: Ingress
+          name: elasticsearch-ingress
+        fieldPaths:
+          - metadata.annotations.cert-manager\.io/cluster-issuer

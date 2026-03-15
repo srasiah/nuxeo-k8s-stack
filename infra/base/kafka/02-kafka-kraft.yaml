@@ -1,0 +1,27 @@
+apiVersion: kafka.strimzi.io/v1
+kind: Kafka
+metadata:
+  name: kafka
+  namespace: kafka
+spec:
+  kafka:
+    version: 4.1.1
+    listeners:
+      - name: internal
+        port: 9092
+        type: internal
+        tls: false
+    config:
+      process.roles: broker,controller
+      controller.quorum.voters: "0@kafka-kafka-0.kafka-kafka-brokers.kafka.svc:9093"
+      controller.listener.names: CONTROLLER
+
+      default.replication.factor: 1
+      min.insync.replicas: 1
+      offsets.topic.replication.factor: 1  
+      transaction.state.log.replication.factor: 1  
+      transaction.state.log.min.isr: 1 
+      delete.topic.enable: true
+
+    rack:
+      topologyKey: kubernetes.io/hostname  

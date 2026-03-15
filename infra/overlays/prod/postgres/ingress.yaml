@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pgadmin-ingress
+  namespace: postgres
+  annotations:
+    cert-manager.io/cluster-issuer: $(CLUSTER_ISSUER)
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - $(PGADMIN_HOST)
+    secretName: pgadmin-tls
+  rules:
+  - host: $(PGADMIN_HOST)
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: pgadmin-service
+            port:
+              number: 80

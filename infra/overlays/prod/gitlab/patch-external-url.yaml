@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gitlab
+  namespace: gitlab
+spec:
+  template:
+    spec:
+      containers:
+      - name: gitlab
+        env:
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: gitlab-config
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: gitlab-config
+              key: DB_PORT
+        - name: DB_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: gitlab-config
+              key: DB_DATABASE
+        - name: DB_USERNAME
+          valueFrom:
+            configMapKeyRef:
+              name: gitlab-config
+              key: DB_USERNAME
+        - name: DB_PASSWORD
+          valueFrom:
+            configMapKeyRef:
+              name: gitlab-config
+              key: DB_PASSWORD
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: gitlab-config
+              key: REDIS_HOST
+        - name: REDIS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: gitlab-config
+              key: REDIS_PORT
+        - name: REDIS_PASSWORD
+          valueFrom:
+            configMapKeyRef:
+              name: gitlab-config
+              key: REDIS_PASSWORD
+        - name: GITLAB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: gitlab-config
+              key: GITLAB_HOST
+        - name: GITLAB_OMNIBUS_CONFIG
+          value: |
+            external_url 'https://$(GITLAB_HOST)'
+            letsencrypt['enable'] = false
+            nginx['listen_https'] = false
+            nginx['listen_port'] = 80
+            nginx['client_max_body_size'] = '2g'
+            gitlab_rails['max_package_file_size'] = 5120  # Add this line for 5 GB package limit
+            
+            # Disable embedded PostgreSQL and use external database
+            postgresql['enable'] = false
+            gitlab_rails['db_adapter'] = 'postgresql'
+            gitlab_rails['db_encoding'] = 'unicode'
+            gitlab_rails['db_host'] = '$(DB_HOST)'
+            gitlab_rails['db_port'] = $(DB_PORT)
+            gitlab_rails['db_database'] = '$(DB_DATABASE)'
+            gitlab_rails['db_username'] = '$(DB_USERNAME)'
+            gitlab_rails['db_password'] = '$(DB_PASSWORD)'
+            
+            # Disable embedded Redis and use external Redis
+            redis['enable'] = false
+            gitlab_rails['redis_host'] = '$(REDIS_HOST)'
+            gitlab_rails['redis_port'] = $(REDIS_PORT)
+            gitlab_rails['redis_password'] = '$(REDIS_PASSWORD)'
+        resources:
+          requests:
+            memory: "6Gi"
+            cpu: "1000m"
+          limits:
+            memory: "10Gi"
+            cpu: "5000m"

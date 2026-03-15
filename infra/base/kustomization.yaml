@@ -1,0 +1,66 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - cert-manager/
+  - storage/
+  - metallb/
+  - keycloak/
+  - elastic-operator/
+  - elasticsearch/
+  - kafka-operator/
+  - kafka/
+  - mongo/
+  - minio/
+  - mailhog/
+  - sftp/
+  - monitoring/
+  - loki/
+
+  - gitlab/
+
+
+#- postgres/
+#- jenkins/
+
+
+images:
+# - name: docker.elastic.co/elasticsearch/elasticsearch
+#   newName: docker.elastic.co/elasticsearch/elasticsearch
+#   newTag: 8.13.0
+# - name: docker.elastic.co/kibana/kibana
+#   newName: docker.elastic.co/kibana/kibana
+#   newTag: 8.13.0
+# - name: confluentinc/cp-kafka
+#   newName: confluentinc/cp-kafka
+#   newTag: 7.5.0
+# - name: dprovectuslabs/kafka-ui
+#   newName: dprovectuslabs/kafka-ui
+#   newTag: latest
+# - name: confluentinc/cp-zookeeper
+#   newName: confluentinc/cp-zookeeper
+#   newTag: 7.5.0
+- name: mailhog/mailhog
+  newName: mailhog/mailhog
+  newTag: latest
+- name: mongo
+  newName: mongo
+  newTag: 8.0.10
+- name: mongo-express
+  newName: mongo-express
+  newTag: 1.0.2
+- name: quay.io/minio/minio
+  newName: quay.io/minio/minio
+  newTag: RELEASE.2025-05-24T17-08-30Z
+- name: postgres
+  newName: postgres
+  newTag: 17-alpine
+- name: dpage/pgadmin4
+  newName: dpage/pgadmin4
+  newTag: 9.11.0
+- name: quay.io/keycloak/keycloak
+  newName: quay.io/keycloak/keycloak
+  newTag: "22.0"
+- name: gitlab/gitlab-ce
+  newName: gitlab/gitlab-ce
+  newTag: "18.6.4-ce.0"

@@ -1,0 +1,43 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: keycloak
+
+resources:
+  - ../../../base/keycloak
+  - ingress.yaml
+
+images:
+- name: quay.io/keycloak/keycloak
+  newName: quay.io/keycloak/keycloak
+  newTag: "22.0.5"
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+configMapGenerator:
+  - name: keycloak-config
+    envs:
+      - .env.keycloak
+
+replacements:
+  - source:
+      kind: ConfigMap
+      name: keycloak-config
+      fieldPath: data.KEYCLOAK_HOST
+    targets:
+      - select:
+          kind: Ingress
+          name: keycloak
+        fieldPaths:
+          - spec.rules.0.host
+          - spec.tls.0.hosts.0
+  - source:
+      kind: ConfigMap
+      name: keycloak-config
+      fieldPath: data.CLUSTER_ISSUER
+    targets:
+      - select:
+          kind: Ingress
+          name: keycloak
+        fieldPaths:
+          - metadata.annotations.cert-manager\.io/cluster-issuer

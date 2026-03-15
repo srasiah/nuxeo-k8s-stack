@@ -1,0 +1,20 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: redis
+
+resources:
+- 01-namespace.yaml
+- 02-pvc.yaml
+- 03-deployment.yaml
+- 04-service.yaml
+- 05-commander-deployment.yaml
+- 06-commander-service.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+secretGenerator:
+  - name: redis-secret
+    envs:
+      - .env.redis.secret
+

@@ -1,0 +1,63 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nuxeo-config-00-core
+data:
+  00-core.conf: |
+    # Host Configuration
+    session.timeout=600
+    nuxeo.url=http://localhost:8080/${env:NUXEO_CONTEXT:nuxeo}
+    org.nuxeo.ecm.contextPath=/${env:NUXEO_CONTEXT:nuxeo}
+    nuxeo.force.generation=true
+
+    # Templates
+    nuxeo.templates=common,mongodb
+
+    # Nuxeo Connect
+    org.nuxeo.connect.url=https://connect.nuxeo.com/nuxeo/site/
+    #org.nuxeo.connect.server.reachable=false
+
+    # CORS
+    nuxeo.cors.urls=*
+
+    # MongoDB
+    nuxeo.mongodb.server=mongodb://${env:MONGODB_USERNAME}:${env:MONGODB_PASSWORD}@mongodb-service.mongo.svc.cluster.local:27017/?authSource=admin
+    nuxeo.mongodb.dbname=${env:NUXEO_MONGODB_DBNAME:nuxeo-base}
+
+    # Binary Manager
+    nuxeo.core.binarymanager=${env:NUXEO_BLOB_MANAGER:org.nuxeo.ecm.core.blob.LocalBlobProvider}
+
+    # Elasticsearch
+    elasticsearch.enabled=${env:NUXEO_ELASTICSEARCH_ENABLED:true}
+    elasticsearch.indexName=${env:NUXEO_ELASTICSEARCH_INDEXNAME:nuxeo-base}
+    elasticsearch.addressList=${env:NUXEO_ELASTICSEARCH_ADDRESSLIST:elasticsearch-es-http.elasticsearch.svc.cluster.local:9200}
+    elasticsearch.httpReadOnly.baseUrl=${env:NUXEO_ELASTICSEARCH_HTTPONLY_BASEURL:http://elasticsearch-es-http.elasticsearch.svc.cluster.local:9200}
+    elasticsearch.client=${env:NUXEO_ELASTICSEARCH_CLIENTNAME:RestClient}
+    elasticsearch.restClient.username=${env:ELASTICSEARCH_USERNAME:elastic}
+    elasticsearch.restClient.password=${env:ELASTICSEARCH_PASSWORD:changeme}
+    elasticsearch.restClient.ssl.certificate.verification=${env:NUXEO_ELASTICSEARCH_SSL_CERT_VERIFICATION:false}
+    elasticsearch.httpEnabled=${env:NUXEO_ELASTICSEARCH_HTTPENABLED:true}
+    elasticsearch.indexNumberOfShards=${env:NUXEO_ELASTICSEARCH_INDEXNUMBEROFSHARDS:1}
+    elasticsearch.indexNumberOfReplicas=${env:NUXEO_ELASTICSEARCH_INDEXNUMBEROFREPLICAS:1}
+    elasticsearch.manageAlias.enabled=${env:NUXEO_ELASTICSEARCH_MANAGEALIAS_ENABLED:true}
+    elasticsearch.clusterName=${env:NUXEO_CLUSTER_NAME:elasticsearch}
+    #audit.elasticsearch.enabled=${env:NUXEO_AUDIT_ELASTICSEARCH_ENABLED:true}
+    #audit.elasticsearch.indexName=${env:NUXEO_ELASTICSEARCH_INDEXPREFIX:nuxeo-base-audit}
+
+    # Kafka
+    kafka.enabled=${env:NUXEO_KAFKA_ENABLED:true}
+    kafka.topicPrefix=${env:NUXEO_KAFKA_TOPICPREFIX:nuxeo-base-}
+    kafka.bootstrap.servers=${env:NUXEO_KAFKA_BOOTSTRAP_SERVERS:kafka-kafka-bootstrap.kafka.svc.cluster.local:9092}
+    nuxeo.stream.work.enabled=${env:NUXEO_STREAM_WORK_ENABLED:true}
+    nuxeo.stream.kafka.default.replication.factor=${env:NUXEO_STREAM_KAFKA_DEFAULT_REPLICATION_FACTOR:1}
+
+    # Cluster
+    nuxeo.cluster.enabled=${env:NUXEO_CLUSTER_ENABLED:true}
+    elasticsearch.clusterName=${env:NUXEO_CLUSTER_NAME:elasticsearch}
+    nuxeo.cluster.nodeid=${env:NUXEO_CLUSTER_NODEID}
+
+    # Worker-specific settings
+    nuxeo.worker.enabled=${env:NUXEO_WORKER_ENABLED:false}
+    nuxeo.stream.processing.enabled=${env:NUXEO_STREAM_PROCESSING_ENABLED:false}
+
+

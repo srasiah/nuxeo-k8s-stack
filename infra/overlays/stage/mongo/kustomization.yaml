@@ -1,0 +1,45 @@
+# infra/overlays/dev/mongo/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: mongo
+
+resources:
+- ../../../base/mongo
+- ingress.yaml
+
+images:
+- name: mongo
+  newName: mongo
+  newTag: "7.0.14"
+- name: mongo-express
+  newName: mongo-express
+  newTag: "1.0.2"
+
+configMapGenerator:
+  - name: mongo-config
+    envs:
+      - .env.mongo
+
+replacements:
+  - source:
+      kind: ConfigMap
+      name: mongo-config
+      fieldPath: data.MONGO_EXPRESS_HOST
+    targets:
+      - select:
+          kind: Ingress
+          name: mongo-ingress
+        fieldPaths:
+          - spec.rules.0.host
+          - spec.tls.0.hosts.0
+  - source:
+      kind: ConfigMap
+      name: mongo-config
+      fieldPath: data.CLUSTER_ISSUER
+    targets:
+      - select:
+          kind: Ingress
+          name: mongo-ingress
+        fieldPaths:
+          - metadata.annotations.cert-manager\.io/cluster-issuer
+

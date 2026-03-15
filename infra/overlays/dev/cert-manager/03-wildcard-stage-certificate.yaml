@@ -1,0 +1,13 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wildcard-dev-example-com
+  namespace: cert-manager
+spec:
+  secretName: wildcard-dev-example-com-tls
+  issuerRef:
+    name: selfsigned-issuer
+    kind: ClusterIssuer
+  dnsNames:
+  - "*.dev.example.com"
+  - "dev.example.com"

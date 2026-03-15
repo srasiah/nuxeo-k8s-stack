@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-ui
+  namespace: kafka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-ui
+  template:
+    metadata:
+      labels:
+        app: kafka-ui
+        # app.kubernetes.io/managed-by: kustomize
+        # app.kubernetes.io/part-of: kafka-stack
+    spec:
+      containers:
+        - name: kafka-ui
+          image: provectuslabs/kafka-ui:v0.6.2
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          env:
+            - name: KAFKA_CLUSTERS_0_NAME
+              value: "kraft-cluster"
+            - name: KAFKA_CLUSTERS_0_BOOTSTRAP_SERVERS
+              value: "kafka-kafka-bootstrap.kafka.svc:9092"
+            - name: KAFKA_CLUSTERS_0_READONLY
+              value: "true"
+            - name: KAFKA_CLUSTERS_0_PROPERTIES_SECURITY_PROTOCOL
+              value: "PLAINTEXT"
+            - name: KAFKA_CLUSTERS_0_PROPERTIES_REQUEST_TIMEOUT_MS
+              value: "5000"
+            - name: KAFKA_CLUSTERS_0_PROPERTIES_CONNECTIONS_MAX_IDLE_MS
+              value: "10000"

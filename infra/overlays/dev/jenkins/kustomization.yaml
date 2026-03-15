@@ -1,0 +1,45 @@
+# infra/overlays/dev/jenkins/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: jenkins
+
+resources:
+- ../../../base/jenkins
+- ingress.yaml
+
+images:
+- name: jenkins/jenkins
+  newName: jenkins/jenkins
+  newTag: 2.489-jdk21
+
+configMapGenerator:
+  - name: jenkins-config
+    envs:
+      - .env.jenkins
+
+patches:
+- path: 21-jenkins-patch.yaml
+
+replacements:
+  - source:
+      kind: ConfigMap
+      name: jenkins-config
+      fieldPath: data.JENKINS_HOST
+    targets:
+      - select:
+          kind: Ingress
+          name: jenkins-ingress
+        fieldPaths:
+          - spec.rules.0.host
+          - spec.tls.0.hosts.0
+  - source:
+      kind: ConfigMap
+      name: jenkins-config
+      fieldPath: data.CLUSTER_ISSUER
+    targets:
+      - select:
+          kind: Ingress
+          name: jenkins-ingress
+        fieldPaths:
+          - metadata.annotations.cert-manager\.io/cluster-issuer
+

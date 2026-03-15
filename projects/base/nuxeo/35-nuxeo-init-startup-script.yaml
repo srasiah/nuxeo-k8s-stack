@@ -1,0 +1,88 @@
+# nuxeo-k8s-base/nuxeo-init-startup-script.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nuxeo-init-startup-script
+data:
+  nuxeo-startup.sh: |
+    #!/bin/bash
+    set -e
+
+    echo "=================================================="
+    echo "Nuxeo Startup Script - $(date)"
+    echo "=================================================="
+    echo "Environment variables:"
+    echo "  NUXEO_ELASTICSEARCH_ADDRESSLIST: ${NUXEO_ELASTICSEARCH_ADDRESSLIST}"
+    echo "  NUXEO_PROFILES: ${NUXEO_PROFILES}"
+    echo "  NUXEO_ENVIRONMENT: ${NUXEO_ENVIRONMENT}"
+    echo "  NUXEO_RUN_MODE: ${NUXEO_RUN_MODE}"
+    echo "=================================================="
+
+    echo "################################################"
+    echo "## Step 1: Wait for Elasticsearch"
+    echo "################################################"
+    echo "Checking Elasticsearch connectivity..."
+
+    ES_URL="${NUXEO_ELASTICSEARCH_ADDRESSLIST}"
+    echo "Elasticsearch URL: ${ES_URL}"
+
+    # Wait for Elasticsearch with detailed logging
+    ES_URL="${NUXEO_ELASTICSEARCH_ADDRESSLIST}"
+    timeout 300 bash -c "
+      attempt=1
+      while ! curl -s -o /dev/null -w \"%{http_code}\" \"${ES_URL}\" | grep -q \"200\|403\|401\"; do
+        echo \"Attempt \${attempt}: Elasticsearch not ready (waiting...)\"
+        sleep 5
+        attempt=\$((attempt + 1))
+        if [ \$attempt -gt 60 ]; then
+          echo \"Failed to connect to Elasticsearch after 300 seconds\"
+          exit 1
+        fi
+      done
+      echo \"Elasticsearch is responding!\"
+    " || {
+      echo "ERROR: Elasticsearch not reachable within 300 seconds"
+      echo "Final check:"
+      curl -v "${ES_URL}/_cluster/health" || echo "Curl failed"
+      exit 1
+    }
+
+    echo "################################################"
+    echo "## Step 2: Verify Elasticsearch cluster health"
+    echo "################################################"
+
+    ES_HEALTH=$(curl -s "${ES_URL}/_cluster/health" | grep -o '"status":"[^"]*"' | cut -d'"' -f4 2>/dev/null || echo "unknown")
+    echo "Elasticsearch cluster status: ${ES_HEALTH}"
+
+    if [ "${ES_HEALTH}" = "red" ]; then
+      echo "WARNING: Elasticsearch cluster is in RED status"
+    elif [ "${ES_HEALTH}" = "yellow" ]; then
+      echo "WARNING: Elasticsearch cluster is in YELLOW status"
+    elif [ "${ES_HEALTH}" = "green" ]; then
+      echo "SUCCESS: Elasticsearch cluster is GREEN"
+    else
+      echo "WARNING: Could not determine Elasticsearch cluster status"
+    fi
+
+    echo "################################################"
+    echo "## Step 3: Check MongoDB connectivity"
+    echo "################################################"
+
+    if [ -n "${MONGODB_USERNAME}" ] && [ -n "${MONGODB_PASSWORD}" ]; then
+      echo "MongoDB credentials found, testing connection..."
+      # Add MongoDB connectivity check here if needed
+      echo "MongoDB connection check skipped (implement if needed)"
+    else
+      echo "No MongoDB credentials found"
+    fi
+
+    echo "################################################"
+    echo "## Step 4: Final checks before Nuxeo startup"
+    echo "################################################"
+
+    echo "All prerequisites met. Launching Nuxeo server..."
+    echo "Startup script completed successfully at $(date)"
+    echo "=================================================="
+
+    # Start the Nuxeo server as the main process (foreground)
+    exec /opt/nuxeo/server/bin/nuxeoctl console

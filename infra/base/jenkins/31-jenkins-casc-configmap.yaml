@@ -1,0 +1,108 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jenkins-casc
+data:
+  jenkins.yaml: |
+    jenkins:
+      systemMessage: "Jenkins configured automatically by Jenkins Configuration as Code plugin"
+      
+      securityRealm:
+        local:
+          allowsSignup: false
+          users:
+            - id: "admin"
+              password: "${JENKINS_ADMIN_PASSWORD:-admin}"
+      
+      authorizationStrategy:
+        globalMatrix:
+          permissions:
+            - "Overall/Administer:admin"
+            - "Overall/Read:authenticated"
+      
+      numExecutors: 0
+      mode: EXCLUSIVE
+      
+      clouds:
+        - kubernetes:
+            name: "kubernetes"
+            serverUrl: "https://kubernetes.default.svc.cluster.local"
+            namespace: "jenkins"
+            jenkinsUrl: "http://jenkins-service.jenkins.svc.cluster.local:8080"
+            jenkinsTunnel: "jenkins-service.jenkins.svc.cluster.local:50000"
+            containerCapStr: "10"
+            connectTimeout: 5
+            readTimeout: 15
+            podLabels:
+              - key: "jenkins"
+                value: "agent"
+            templates:
+              - name: "maven"
+                namespace: "jenkins"
+                label: "maven"
+                nodeUsageMode: EXCLUSIVE
+                containers:
+                  - name: "maven"
+                    image: "maven:3.9.9-eclipse-temurin-17"
+                    command: "cat"
+                    ttyEnabled: true
+                    workingDir: "/home/jenkins/agent"
+              - name: "docker"
+                namespace: "jenkins"
+                label: "docker"
+                nodeUsageMode: EXCLUSIVE
+                containers:
+                  - name: "docker"
+                    image: "docker:27-dind"
+                    command: "cat"
+                    ttyEnabled: true
+                    privileged: true
+                    workingDir: "/home/jenkins/agent"
+    
+      unclassified:
+      location:
+        url: "http://jenkins.k8s.local"
+        adminAddress: "admin@k8s.local"
+      
+      globalLibraries:
+        libraries:
+          - name: "shared-library"
+            defaultVersion: "main"
+            retriever:
+              modernSCM:
+                scm:
+                  git:
+                    remote: "https://github.com/your-org/jenkins-shared-library.git"
+    
+    jobs:
+      - script: |
+          folder('examples') {
+            description('Example pipelines')
+          }
+      
+      - script: |
+          pipelineJob('examples/hello-world') {
+            definition {
+              cps {
+                script('''
+                  pipeline {
+                    agent {
+                      kubernetes {
+                        label 'maven'
+                      }
+                    }
+                    stages {
+                      stage('Build') {
+                        steps {
+                          container('maven') {
+                            sh 'mvn --version'
+                          }
+                        }
+                      }
+                    }
+                  }
+                ''')
+                sandbox()
+              }
+            }
+          }

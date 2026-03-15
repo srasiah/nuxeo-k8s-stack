@@ -1,0 +1,49 @@
+# infra/overlays/dev/postgres/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: postgres
+
+resources:
+- ../../../base/postgres
+- ingress.yaml
+
+images:
+- name: postgres
+  newName: postgres
+  newTag: 17-alpine
+- name: dpage/pgadmin4
+  newName: dpage/pgadmin4
+  newTag: "9.11.0"
+
+configMapGenerator:
+  - name: postgres-config
+    envs:
+      - .env.postgres
+
+patches:
+- path: 21-postgres-patch.yaml
+- path: 50-init-job-patch.yaml
+
+replacements:
+  - source:
+      kind: ConfigMap
+      name: postgres-config
+      fieldPath: data.PGADMIN_HOST
+    targets:
+      - select:
+          kind: Ingress
+          name: pgadmin-ingress
+        fieldPaths:
+          - spec.rules.0.host
+          - spec.tls.0.hosts.0
+  - source:
+      kind: ConfigMap
+      name: postgres-config
+      fieldPath: data.CLUSTER_ISSUER
+    targets:
+      - select:
+          kind: Ingress
+          name: pgadmin-ingress
+        fieldPaths:
+          - metadata.annotations.cert-manager\.io/cluster-issuer
+

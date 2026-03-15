@@ -1,0 +1,13 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wildcard-k8s-example-com
+  namespace: cert-manager
+spec:
+  secretName: wildcard-k8s-example-com-tls
+  issuerRef:
+    name: letsencrypt-staging
+    kind: ClusterIssuer
+  dnsNames:
+  - "*.k8s.example.com"
+  - "k8s.example.com"

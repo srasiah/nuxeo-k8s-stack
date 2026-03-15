@@ -1,0 +1,26 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: mongo
+
+resources:
+- 01-namespace.yaml
+- 02-mongodb-pvc.yaml
+- 21-mongodb-deployment.yaml
+- 22-mongodb-service.yaml
+- 25-mongodb-sysctl-daemonset.yaml
+- 31-mongo-express-deployment.yaml
+- 32-mongo-express-service.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+secretGenerator:
+  - name: mongo-secret
+    envs:
+      - .env.mongo.secret
+
+# labels:
+# - includeSelectors: true
+#   pairs:
+#     app.kubernetes.io/managed-by: kustomize
+#     app.kubernetes.io/part-of: mongo-stack

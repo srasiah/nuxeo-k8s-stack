@@ -1,0 +1,42 @@
+# infra/overlays/dev/redis/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: redis
+
+resources:
+- ../../../base/redis
+- ingress.yaml
+
+configMapGenerator:
+  - name: redis-config
+    envs:
+      - .env.redis
+
+images:
+- name: redis
+  newName: redis
+  newTag: 7.4-alpine
+
+
+replacements:
+  - source:
+      kind: ConfigMap
+      name: redis-config
+      fieldPath: data.REDIS_HOST
+    targets:
+      - select:
+          kind: Ingress
+          name: redis-commander-ingress
+        fieldPaths:
+          - spec.rules.0.host
+          - spec.tls.0.hosts.0
+  - source:
+      kind: ConfigMap
+      name: redis-config
+      fieldPath: data.CLUSTER_ISSUER
+    targets:
+      - select:
+          kind: Ingress
+          name: redis-commander-ingress
+        fieldPaths:
+          - metadata.annotations.cert-manager\.io/cluster-issuer

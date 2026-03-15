@@ -1,0 +1,15 @@
+
+# Patch for MetalLB DaemonSet to fix duplicate port issue
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: frr-k8s-daemon
+  namespace: metallb-system
+spec:
+  template:
+    spec:
+      containers:
+        - name: frr-metrics
+          ports:
+            - containerPort: 7573
+              name: frr-metrics-mon
